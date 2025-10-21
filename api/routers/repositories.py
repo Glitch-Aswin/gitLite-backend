@@ -15,6 +15,16 @@ from typing import List
 router = APIRouter(prefix="/repositories", tags=["repositories"])
 
 
+@router.get("", response_model=List[RepositoryResponse])
+async def list_repositories(
+    user_id: str = Depends(get_current_user_id),
+    db = Depends(get_db)
+):
+    """List all repositories owned by the authenticated user"""
+    service = RepositoryService(db)
+    return await service.list_user_repositories(user_id)
+
+
 @router.post("", response_model=RepositoryResponse)
 async def create_repository(
     repo: RepositoryCreate,

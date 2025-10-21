@@ -173,7 +173,41 @@ Get public user profile (no authentication required).
 
 ## 📁 Repository Endpoints
 
-### 1. Create Repository
+### 1. List User Repositories
+**GET** `/repositories`
+
+🔒 **Requires Authentication**
+
+**Headers**:
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200 OK)**:
+```json
+[
+  {
+    "id": 1,
+    "name": "my-project",
+    "description": "My awesome project",
+    "owner_id": "uuid-string",
+    "created_at": "2025-10-22T10:30:00Z",
+    "updated_at": "2025-10-22T10:30:00Z"
+  },
+  {
+    "id": 2,
+    "name": "another-repo",
+    "description": "Another repository",
+    "owner_id": "uuid-string",
+    "created_at": "2025-10-22T11:00:00Z",
+    "updated_at": "2025-10-22T11:00:00Z"
+  }
+]
+```
+
+---
+
+### 2. Create Repository
 **POST** `/repositories`
 
 🔒 **Requires Authentication**
@@ -205,7 +239,7 @@ Authorization: Bearer <access_token>
 
 ---
 
-### 2. Get Repository
+### 3. Get Repository
 **GET** `/repositories/{repo_id}`
 
 **Response (200 OK)**:
@@ -222,7 +256,7 @@ Authorization: Bearer <access_token>
 
 ---
 
-### 3. Update Repository
+### 4. Update Repository
 **PUT** `/repositories/{repo_id}`
 
 🔒 **Requires Authentication** (must be owner)
@@ -254,7 +288,7 @@ Authorization: Bearer <access_token>
 
 ---
 
-### 4. Delete Repository
+### 5. Delete Repository
 **DELETE** `/repositories/{repo_id}`
 
 🔒 **Requires Authentication** (must be owner)
@@ -273,7 +307,7 @@ Authorization: Bearer <access_token>
 
 ---
 
-### 5. Get Repository Stats
+### 6. Get Repository Stats
 **GET** `/repositories/{repo_id}/stats`
 
 **Response (200 OK)**:
@@ -288,7 +322,7 @@ Authorization: Bearer <access_token>
 
 ---
 
-### 6. Get Repository Activity
+### 7. Get Repository Activity
 **GET** `/repositories/{repo_id}/activity?limit=20`
 
 **Query Parameters**:
@@ -316,7 +350,7 @@ Authorization: Bearer <access_token>
 
 ---
 
-### 7. Compare Repository States
+### 8. Compare Repository States
 **POST** `/repositories/{repo_id}/compare`
 
 Compare repository states between two dates.

@@ -7,6 +7,19 @@ class RepositoryService:
     def __init__(self, db: Client):
         self.db = db
     
+    async def list_user_repositories(self, owner_id: str):
+        """List all repositories owned by a user"""
+        try:
+            response = self.db.table('repositories') \
+                .select('*') \
+                .eq('owner_id', owner_id) \
+                .order('updated_at', desc=True) \
+                .execute()
+            
+            return response.data if response.data else []
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Error fetching repositories: {str(e)}")
+    
     async def create_repository(self, repo: RepositoryCreate, owner_id: str):
         """Create a new repository"""
         try:
