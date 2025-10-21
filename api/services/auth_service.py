@@ -27,7 +27,24 @@ class AuthService:
                         profile_response = self.db.table('users').select('*').eq('id', response.user.id).execute()
                         if profile_response.data:
                             profile = profile_response.data[0]
-                    except:
+                        else:
+                            # Profile doesn't exist, create it from user metadata or provided data
+                            user_metadata = response.user.user_metadata or {}
+                            profile_data = {
+                                'id': response.user.id,
+                                'email': response.user.email,
+                                'username': user_data.username or user_metadata.get('username') or response.user.email.split('@')[0],
+                                'full_name': user_data.full_name or user_metadata.get('full_name')
+                            }
+                            try:
+                                create_response = self.db.table('users').insert(profile_data).execute()
+                                if create_response.data:
+                                    profile = create_response.data[0]
+                            except Exception as e:
+                                print(f"Profile creation warning: {e}")
+                                profile = profile_data
+                    except Exception as e:
+                        print(f"Profile fetch error: {e}")
                         pass
                     
                     return {
@@ -166,7 +183,24 @@ class AuthService:
                 profile_response = self.db.table('users').select('*').eq('id', response.user.id).execute()
                 if profile_response.data:
                     profile = profile_response.data[0]
-            except:
+                else:
+                    # Profile doesn't exist, create it from user metadata
+                    user_metadata = response.user.user_metadata or {}
+                    profile_data = {
+                        'id': response.user.id,
+                        'email': response.user.email,
+                        'username': user_metadata.get('username') or response.user.email.split('@')[0],
+                        'full_name': user_metadata.get('full_name')
+                    }
+                    try:
+                        create_response = self.db.table('users').insert(profile_data).execute()
+                        if create_response.data:
+                            profile = create_response.data[0]
+                    except Exception as e:
+                        print(f"Profile creation warning: {e}")
+                        profile = profile_data
+            except Exception as e:
+                print(f"Profile fetch error: {e}")
                 pass
             
             return {
@@ -221,16 +255,17 @@ class AuthService:
     async def get_user(self, user_id: str):
         """Get user details"""
         try:
-            # Get from auth
-            user_response = self.db.auth.admin.get_user_by_id(user_id)
-            
-            # Get profile
+            # Get profile from public.users table
             profile_response = self.db.table('users').select('*').eq('id', user_id).execute()
-            profile = profile_response.data[0] if profile_response.data else {}
+            
+            if not profile_response.data:
+                raise HTTPException(status_code=404, detail="User profile not found")
+            
+            profile = profile_response.data[0]
             
             return {
                 "id": user_id,
-                "email": user_response.user.email if user_response.user else None,
+                "email": profile.get('email'),
                 "full_name": profile.get('full_name'),
                 "username": profile.get('username'),
                 "bio": profile.get('bio'),
@@ -238,6 +273,8 @@ class AuthService:
                 "created_at": profile.get('created_at')
             }
             
+        except HTTPException:
+            raise
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"User not found: {str(e)}")
     
