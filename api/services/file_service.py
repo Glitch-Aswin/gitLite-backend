@@ -73,7 +73,7 @@ class FileService:
     
     async def get_file(self, repo_id: int, file_id: int):
         """Get specific file details with current version content"""
-        file_response = self.db.table('files').select('*').eq('id', file_id).eq('repository_id', repo_id).execute()
+        file_response = self.db.table('files').select('*').eq('repository_id', repo_id).eq('id', file_id).execute()
         
         if not file_response.data:
             raise HTTPException(status_code=404, detail="File not found")
