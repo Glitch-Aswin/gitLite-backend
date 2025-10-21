@@ -171,7 +171,7 @@ class FileService:
             .order('version_number', desc=False) \
             .execute()
         
-        return versions_response.data
+        return versions_response.data.reverse()
     
     async def get_file_version(self, repo_id: int, file_id: int, version: int):
         """Get specific version of a file"""
