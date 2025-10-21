@@ -93,7 +93,7 @@ async def get_file_version(
     return await service.get_file_version(repo_id, file_id, version)
 
 
-@router.get("/repositories/{repo_id}/files/{file_id}/diff/{v1}/{v2}", response_model=FileDiffResponse)
+@router.get("/repositories/{repo_id}/files/{file_id}/diff/{v1}/{v2}")
 async def diff_file_versions(
     repo_id: int,
     file_id: int,
@@ -101,6 +101,18 @@ async def diff_file_versions(
     v2: int,
     db = Depends(get_db)
 ):
-    """Compare two versions of a file"""
+    """
+    Compare two versions of a file with enhanced diff formats.
+    
+    Returns multiple diff formats:
+    - **diff**: Enhanced unified diff with statistics (git-style)
+    - **side_by_side**: Detailed line-by-line comparison with metadata
+    - **compact**: Concise diff showing only changed sections
+    
+    Perfect for:
+    - Code review workflows
+    - Change tracking
+    - Visual diff displays in UI
+    """
     service = FileService(db)
     return await service.diff_versions(repo_id, file_id, v1, v2)

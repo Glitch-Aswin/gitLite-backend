@@ -576,8 +576,10 @@ Creates a new version of the file.
 
 ---
 
-### 8. Compare File Versions (Diff)
+### 8. Compare File Versions (Enhanced Diff)
 **GET** `/repositories/{repo_id}/files/{file_id}/diff/{v1}/{v2}`
+
+Compare two versions of a file with multiple diff formats for different use cases.
 
 **Response (200 OK)**:
 ```json
@@ -586,9 +588,110 @@ Creates a new version of the file.
   "filename": "main.py",
   "version1": 1,
   "version2": 3,
-  "diff": "--- Version 1\n+++ Version 3\n@@ -1 +1,2 @@\n print('Hello World')\n+print('Version 3')"
+  "diff": "Changes: +12 -5\n==================================================\n--- a/file\n+++ b/file\n@@ -1,3 +1,4 @@\n def hello():\n-    print('old')\n+    print('new')\n+    return True",
+  "side_by_side": {
+    "changes": [
+      {
+        "type": "modify",
+        "old_lines": ["def hello():"],
+        "new_lines": ["def hello(name):"],
+        "old_line_numbers": [1],
+        "new_line_numbers": [1]
+      },
+      {
+        "type": "insert",
+        "new_lines": ["    return True"],
+        "new_line_numbers": [4]
+      },
+      {
+        "type": "delete",
+        "old_lines": ["    pass"],
+        "old_line_numbers": [3]
+      }
+    ],
+    "statistics": {
+      "additions": 12,
+      "deletions": 5,
+      "modifications": 3,
+      "total_changes": 20
+    },
+    "summary": "+12 -5 ~3"
+  },
+  "compact": "Summary: +12 -5\n==================================================\n@ Line 1-2 → 1-3\n- def hello():\n+ def hello(name):\n\n@ Line 4 (added)\n+     return True"
 }
 ```
+
+**Response Fields**:
+
+- **diff** (string): Enhanced unified diff with statistics
+  - Git-style format with `+++`/`---` headers
+  - Shows change summary at top: `Changes: +X -Y`
+  - Context lines around changes (default: 3 lines)
+  - Standard format for code review tools
+  
+- **side_by_side** (object): Structured line-by-line comparison
+  - **changes** (array): List of change blocks
+    - **type**: `"modify"` | `"insert"` | `"delete"` | `"equal"`
+    - **old_lines**: Lines from version 1 (for modify/delete)
+    - **new_lines**: Lines from version 2 (for modify/insert)
+    - **old_line_numbers**: Line numbers in version 1
+    - **new_line_numbers**: Line numbers in version 2
+    - **lines**: Unchanged lines (for equal type)
+  - **statistics**: Detailed change metrics
+    - **additions**: Number of lines added
+    - **deletions**: Number of lines deleted
+    - **modifications**: Number of lines modified
+    - **total_changes**: Sum of all changes
+  - **summary**: Concise summary string (e.g., "+12 -5 ~3")
+  
+- **compact** (string): Minimal diff showing only changes
+  - Shows only changed sections (no context)
+  - Perfect for large files with small changes
+  - Section markers indicate line ranges
+  - Quick overview format
+
+**Use Cases**:
+
+1. **diff**: Display in code review UI, integrate with git tools
+2. **side_by_side**: Build interactive diff viewer, highlight specific changes
+3. **compact**: Show in notifications, email summaries, quick previews
+
+**Example Usage**:
+
+```javascript
+// Fetch diff between versions 1 and 3
+const response = await fetch(
+  'http://localhost:8000/repositories/1/files/5/diff/1/3',
+  {
+    headers: { Authorization: `Bearer ${token}` }
+  }
+);
+
+const { diff, side_by_side, compact } = await response.json();
+
+// Display unified diff (git-style)
+console.log(diff);
+
+// Render side-by-side in UI
+side_by_side.changes.forEach(change => {
+  if (change.type === 'modify') {
+    renderModification(change.old_lines, change.new_lines);
+  } else if (change.type === 'insert') {
+    renderAddition(change.new_lines);
+  } else if (change.type === 'delete') {
+    renderDeletion(change.old_lines);
+  }
+});
+
+// Show compact summary
+alert(compact);
+```
+
+**Notes**:
+- Only works with text files (content_text must be present)
+- Returns 400 error for binary files
+- Version numbers must exist for the file
+- Compares complete file contents at each version
 
 ---
 

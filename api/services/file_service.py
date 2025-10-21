@@ -1,8 +1,15 @@
 from supabase import Client
 from api.models.schemas import FileCreate, FileUpdate
-from api.utils.helpers import calculate_content_hash, calculate_file_size, generate_diff, detect_mime_type
+from api.utils.helpers import (
+    calculate_content_hash, 
+    calculate_file_size, 
+    generate_diff, 
+    generate_side_by_side_diff,
+    generate_compact_diff,
+    detect_mime_type
+)
 from fastapi import HTTPException
-from typing import Optional
+from typing import Optional, Literal
 
 
 class FileService:
@@ -171,8 +178,7 @@ class FileService:
             .order('version_number', desc=False) \
             .execute()
         
-        # Return versions in reverse order (latest first)
-        return list(reversed(versions_response.data))
+        return versions_response.data.reverse()
     
     async def get_file_version(self, repo_id: int, file_id: int, version: int):
         """Get specific version of a file"""
@@ -211,12 +217,21 @@ class FileService:
         if not version1.get('content_text') or not version2.get('content_text'):
             raise HTTPException(status_code=400, detail="Can only diff text files")
         
+        # Generate enhanced unified diff
         diff = generate_diff(version1['content_text'], version2['content_text'])
+        
+        # Generate side-by-side diff for detailed view
+        side_by_side = generate_side_by_side_diff(version1['content_text'], version2['content_text'])
+        
+        # Generate compact diff for quick overview
+        compact = generate_compact_diff(version1['content_text'], version2['content_text'])
         
         return {
             'file_id': file_id,
             'filename': filename,
             'version1': v1,
             'version2': v2,
-            'diff': diff
+            'diff': diff,
+            'side_by_side': side_by_side,
+            'compact': compact
         }

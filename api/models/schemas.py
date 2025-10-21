@@ -78,12 +78,37 @@ class FileVersionDetailResponse(FileVersionResponse):
     content_binary: Optional[bytes] = None
 
 
+class DiffStatistics(BaseModel):
+    additions: int
+    deletions: int
+    modifications: int
+    total_changes: int
+
+
+class DiffChange(BaseModel):
+    type: str  # 'modify', 'delete', 'insert', 'equal'
+    old_lines: Optional[list[str]] = None
+    new_lines: Optional[list[str]] = None
+    lines: Optional[list[str]] = None
+    old_line_numbers: Optional[list[int]] = None
+    new_line_numbers: Optional[list[int]] = None
+    line_numbers: Optional[list[int]] = None
+
+
+class SideBySideDiff(BaseModel):
+    changes: list[DiffChange]
+    statistics: DiffStatistics
+    summary: str
+
+
 class FileDiffResponse(BaseModel):
     file_id: int
     filename: str
     version1: int
     version2: int
     diff: str
+    side_by_side: SideBySideDiff
+    compact: str
 
 
 # ========================
