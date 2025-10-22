@@ -1,0 +1,10 @@
+anyio==4.11.0
+certifi==2025.10.5
+email-validator==2.2.0
+fastapi==0.119.1
+pydantic==2.10.6
+pydantic-settings==2.11.0
+pyjwt==2.10.1
+python-dotenv==1.1.1
+supabase==2.22.0
+uvicorn==0.38.0
