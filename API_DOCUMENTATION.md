@@ -119,7 +119,83 @@ Authorization: Bearer <access_token>
 
 ---
 
-### 5. Update Profile
+### 5. Request Password Reset
+**POST** `/auth/password-reset`
+
+Request a password reset email. The email will contain a link that redirects to the login page with an access token.
+
+**Request Body**:
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+**Response (200 OK)**:
+```json
+{
+  "message": "If the email exists, a password reset link will be sent"
+}
+```
+
+**Notes**:
+- For security, the response doesn't reveal if the email exists in the system
+- The reset link redirects to: `https://gitlite.pages.dev/login?access_token=...`
+- The access token in the URL should be extracted and used in the Update Password endpoint
+- Reset tokens expire after a set time (check your Supabase configuration)
+
+---
+
+### 6. Update Password
+**POST** `/auth/update-password`
+
+Update user password using the access token from the password reset email.
+
+**Request Body**:
+```json
+{
+  "access_token": "token-from-reset-email-url",
+  "new_password": "newSecurePassword123"
+}
+```
+
+**Response (200 OK)**:
+```json
+{
+  "message": "Password updated successfully",
+  "user": {
+    "id": "uuid-string",
+    "email": "user@example.com"
+  }
+}
+```
+
+**Error Responses**:
+
+- **401 Unauthorized** - Invalid or expired reset token:
+```json
+{
+  "detail": "Invalid or expired reset token"
+}
+```
+
+- **400 Bad Request** - Password update failed:
+```json
+{
+  "detail": "Password update failed: <error_message>"
+}
+```
+
+**Password Reset Flow**:
+1. User requests reset via `POST /auth/password-reset`
+2. User receives email with reset link: `https://gitlite.pages.dev/login?access_token=abc123...`
+3. Frontend extracts `access_token` from URL parameters
+4. Frontend calls `POST /auth/update-password` with the token and new password
+5. User can now login with the new password
+
+---
+
+### 7. Update Profile
 **PUT** `/auth/me`
 
 🔒 **Requires Authentication**

@@ -296,22 +296,46 @@ class AuthService:
     async def request_password_reset(self, email: str):
         """Request password reset email"""
         try:
-            self.db.auth.reset_password_for_email(email)  
-            return {"message": "Password reset email sent"}
+            # Redirect to login page after password reset
+            redirect_url = "https://gitlite.pages.dev/reset"
+            
+            self.db.auth.reset_password_for_email(
+                email,
+                options={"redirect_to": redirect_url}
+            )
+            
+            return {"message": "If the email exists, a password reset link will be sent"}
         except Exception as e:
-            # Don't reveal if email exists
+            print(f"Password reset error: {e}")
+            # Don't reveal if email exists (security best practice)
             return {"message": "If the email exists, a password reset link will be sent"}
     
     async def update_password(self, access_token: str, new_password: str):
-        """Update user password"""
+        """Update user password after clicking reset link"""
         try:
-            self.db.auth.set_session(access_token, "")
-            response = self.db.auth.update_user({"password": new_password})
+            # Set the session using the access token from the reset link
+            session_response = self.db.auth.set_session(access_token, refresh_token="")
+            
+            if not session_response.user:
+                raise HTTPException(status_code=401, detail="Invalid or expired reset token")
+            
+            # Update the password
+            response = self.db.auth.update_user({
+                "password": new_password
+            })
             
             if not response.user:
                 raise HTTPException(status_code=400, detail="Failed to update password")
             
-            return {"message": "Password updated successfully"}
+            return {
+                "message": "Password updated successfully",
+                "user": {
+                    "id": response.user.id,
+                    "email": response.user.email
+                }
+            }
             
+        except HTTPException:
+            raise
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Password update failed: {str(e)}")

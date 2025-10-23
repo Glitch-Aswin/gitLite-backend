@@ -151,23 +151,23 @@ async def request_password_reset(
     return await service.request_password_reset(reset_data.email)
 
 
-# @router.post("/password-update")
-# async def update_password(
-#     password_data: PasswordUpdateRequest,
-#     user_id: str = Depends(get_current_user_id),
-#     db = Depends(get_db)
-# ):
-#     """
-#     Update password for authenticated user.
+@router.post("/password-update")
+async def update_password(
+    password_data: PasswordUpdateRequest,
+    user_id: str = Depends(get_current_user_id),
+    db = Depends(get_db)
+):
+    """
+    Update password for authenticated user.
     
-#     Requires authentication.
+    Requires authentication.
     
-#     - **password**: New password
-#     """
-#     # Get access token from the current session
-#     # This is a simplified version - in production, you'd extract it properly
-#     service = AuthService(db)
-#     return {"message": "Password update endpoint - use Supabase client directly for password updates"}
+    - **password**: New password
+    """
+    # Get access token from the current session
+    # This is a simplified version - in production, you'd extract it properly
+    service = AuthService(db)
+    return {"message": "Password update endpoint - use Supabase client directly for password updates"}
 
 
 @router.get("/user/{user_id}", response_model=dict)
