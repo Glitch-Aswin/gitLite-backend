@@ -137,18 +137,18 @@ async def update_profile(
     return await service.update_user_profile(user_id, filtered_data)
 
 
-# @router.post("/password-reset")
-# async def request_password_reset(
-#     reset_data: PasswordResetRequest,
-#     db = Depends(get_db)
-# ):
-#     """
-#     Request a password reset email.
+@router.post("/password-reset")
+async def request_password_reset(
+    reset_data: PasswordResetRequest,
+    db = Depends(get_db)
+):
+    """
+    Request a password reset email.
     
-#     - **email**: Email address to send reset link to
-#     """
-#     service = AuthService(db)
-#     return await service.request_password_reset(reset_data.email)
+    - **email**: Email address to send reset link to
+    """
+    service = AuthService(db)
+    return await service.request_password_reset(reset_data.email)
 
 
 # @router.post("/password-update")
