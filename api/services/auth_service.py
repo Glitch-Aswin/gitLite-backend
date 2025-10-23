@@ -313,14 +313,27 @@ class AuthService:
     async def update_password(self, access_token: str, new_password: str):
         """Update user password after clicking reset link"""
         try:
-            # Set the session using the access token from the reset link
-            session_response = self.db.auth.set_session(access_token, refresh_token="")
+            # Create a new Supabase client instance with the reset token
+            from supabase import create_client
+            import os
             
-            if not session_response.user:
+            supabase_url = os.getenv("SUPABASE_URL")
+            supabase_key = os.getenv("SUPABASE_KEY")
+            
+            # Create temporary client with the user's access token
+            temp_client = create_client(supabase_url, supabase_key)
+            
+            # Verify token and get user
+            user_response = temp_client.auth.get_user(access_token)
+            
+            if not user_response.user:
                 raise HTTPException(status_code=401, detail="Invalid or expired reset token")
             
-            # Update the password
-            response = self.db.auth.update_user({
+            # Set the session with the token
+            temp_client.postgrest.auth(access_token)
+            
+            # Update the password using the authenticated client
+            response = temp_client.auth.update_user({
                 "password": new_password
             })
             
