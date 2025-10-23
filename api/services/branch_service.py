@@ -111,6 +111,29 @@ class BranchService:
         branch_data['files'] = files.data
         return branch_data
     
+    async def get_branch_version_history(self, repo_id: int, branch_name: str):
+        """Get all version history for a branch"""
+        # Get branch
+        branch = self.db.table('branches')\
+            .select('id')\
+            .eq('repository_id', repo_id)\
+            .eq('name', branch_name)\
+            .execute()
+        
+        if not branch.data:
+            raise HTTPException(status_code=404, detail=f"Branch '{branch_name}' not found")
+        
+        branch_id = branch.data[0]['id']
+        
+        # Get all versions from branch_versions table
+        versions = self.db.table('branch_versions')\
+            .select('*, files!inner(filename), file_versions!inner(commit_message, created_at, file_size, mime_type, content_hash)')\
+            .eq('branch_id', branch_id)\
+            .order('created_at', desc=True)\
+            .execute()
+        
+        return versions.data
+    
     async def delete_branch(self, repo_id: int, branch_name: str):
         """Delete branch (cannot delete default)"""
         branch = self.db.table('branches')\

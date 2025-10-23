@@ -83,11 +83,21 @@ class FileService:
             
             if branch_response.data:
                 branch_id = branch_response.data[0]['id']
+                # Add to branch_file_pointers
                 self.db.table('branch_file_pointers').insert({
                     'branch_id': branch_id,
                     'file_id': file_id,
                     'version_id': version_id,
                     'version_number': 1
+                }).execute()
+                
+                # Log to branch_versions history
+                self.db.table('branch_versions').insert({
+                    'branch_id': branch_id,
+                    'file_id': file_id,
+                    'version_id': version_id,
+                    'version_number': 1,
+                    'commit_message': file_data.commit_message or "Initial commit"
                 }).execute()
         
         return file_response.data[0]
@@ -272,6 +282,15 @@ class FileService:
                         'version_id': version_id,
                         'version_number': new_version
                     }).execute()
+                
+                # Log to branch_versions history
+                self.db.table('branch_versions').insert({
+                    'branch_id': branch_id,
+                    'file_id': file_id,
+                    'version_id': version_id,
+                    'version_number': new_version,
+                    'commit_message': file_update.commit_message
+                }).execute()
         
         return await self.get_file(repo_id, file_id, branch)
     

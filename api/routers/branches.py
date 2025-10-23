@@ -67,6 +67,26 @@ async def get_branch(
     return branch
 
 
+@router.get("/repositories/{repo_id}/branches/{branch_name}/versions")
+async def get_branch_versions(
+    repo_id: int,
+    branch_name: str,
+    user_id: str = Depends(get_current_user_id),
+    db=Depends(get_db)
+):
+    """
+    Get all version history for a branch
+    
+    - **repo_id**: Repository ID
+    - **branch_name**: Branch name
+    
+    Returns all versions that have been created or modified in this branch
+    """
+    service = BranchService(db)
+    versions = await service.get_branch_version_history(repo_id, branch_name)
+    return versions
+
+
 @router.delete("/repositories/{repo_id}/branches/{branch_name}")
 async def delete_branch(
     repo_id: int,
