@@ -313,29 +313,20 @@ class AuthService:
     async def update_password(self, access_token: str, new_password: str):
         """Update user password after clicking reset link"""
         try:
-            # Create a new Supabase client instance with the reset token
-            from supabase import create_client
-            import os
+            # Verify the token and update password using admin API
+            # Note: For password reset, we use the token directly to authenticate the request
             
-            supabase_url = os.getenv("SUPABASE_URL")
-            supabase_key = os.getenv("SUPABASE_KEY")
+            # First, verify the user exists with this token
+            user_response = self.db.auth.get_user(access_token)
             
-            # Create temporary client with the user's access token
-            temp_client = create_client(supabase_url, supabase_key)
-            
-            # Verify token and get user
-            user_response = temp_client.auth.get_user(access_token)
-            
-            if not user_response.user:
+            if not user_response or not user_response.user:
                 raise HTTPException(status_code=401, detail="Invalid or expired reset token")
             
-            # Set the session with the token
-            temp_client.postgrest.auth(access_token)
-            
-            # Update the password using the authenticated client
-            response = temp_client.auth.update_user({
-                "password": new_password
-            })
+            # Update the password using the token
+            response = self.db.auth.update_user(
+                access_token,
+                {"password": new_password}
+            )
             
             if not response.user:
                 raise HTTPException(status_code=400, detail="Failed to update password")
@@ -351,4 +342,5 @@ class AuthService:
         except HTTPException:
             raise
         except Exception as e:
+            print(f"Password update error: {str(e)}")
             raise HTTPException(status_code=400, detail=f"Password update failed: {str(e)}")
