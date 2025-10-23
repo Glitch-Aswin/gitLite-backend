@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
-from api.routers import repositories, files, auth
+from api.routers import repositories, files, auth, branches
 from api.auth import bearer_scheme
 
 # Create app with Swagger UI persistent auth
@@ -54,6 +54,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(repositories.router)
 app.include_router(files.router)
+app.include_router(branches.router, tags=["branches"])
 
 
 @app.get("/")
