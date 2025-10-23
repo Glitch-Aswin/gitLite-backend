@@ -313,29 +313,37 @@ class AuthService:
     async def update_password(self, access_token: str, new_password: str):
         """Update user password after clicking reset link"""
         try:
-            # Verify the token and update password using admin API
-            # Note: For password reset, we use the token directly to authenticate the request
+            # The access_token from the reset email is actually a recovery token
+            # We need to exchange it for a session first, then update the password
             
-            # First, verify the user exists with this token
-            user_response = self.db.auth.get_user(access_token)
+            # Exchange the recovery token for a session
+            session_response = self.db.auth.verify_otp({
+                "token": access_token,
+                "type": "recovery"
+            })
             
-            if not user_response or not user_response.user:
+            if not session_response or not session_response.session:
                 raise HTTPException(status_code=401, detail="Invalid or expired reset token")
             
-            # Update the password using the token
-            response = self.db.auth.update_user(
-                access_token,
-                {"password": new_password}
+            # Now we have a valid session, update the password
+            # Set the session to authenticate the password update
+            self.db.auth.set_session(
+                session_response.session.access_token,
+                session_response.session.refresh_token
             )
             
-            if not response.user:
+            # Update the password
+            update_response = self.db.auth.update_user({
+                "password": new_password
+            })
+            
+            if not update_response or not update_response.user:
                 raise HTTPException(status_code=400, detail="Failed to update password")
             
             return {
-                "message": "Password updated successfully",
+                "message": "Password updated successfully. You can now login with your new password.",
                 "user": {
-                    "id": response.user.id,
-                    "email": response.user.email
+                    "email": update_response.user.email
                 }
             }
             
