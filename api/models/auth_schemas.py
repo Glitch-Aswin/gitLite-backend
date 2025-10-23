@@ -39,4 +39,5 @@ class PasswordResetRequest(BaseModel):
 
 
 class PasswordUpdateRequest(BaseModel):
-    password: str
+    access_token: str
+    new_password: str
