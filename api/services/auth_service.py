@@ -310,7 +310,7 @@ class AuthService:
             # Don't reveal if email exists (security best practice)
             return {"message": "If the email exists, a password reset link will be sent"}
     
-    async def update_password(self, access_token: str, new_password: str):
+    async def update_password(self, email: str, access_token: str, new_password: str):
         """Update user password after clicking reset link"""
         try:
             # The access_token from the reset email is actually a recovery token
@@ -318,6 +318,7 @@ class AuthService:
             
             # Exchange the recovery token for a session
             session_response = self.db.auth.verify_otp({
+                "email": email,
                 "token": access_token,
                 "type": "recovery"
             })

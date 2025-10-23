@@ -161,11 +161,13 @@ async def update_password(
     
     Does NOT require authentication - uses the reset token instead.
     
+    - **email**: User's email address
     - **access_token**: Token from the password reset email URL
     - **new_password**: New password to set
     """
     service = AuthService(db)
     return await service.update_password(
+        email=password_data.email,
         access_token=password_data.access_token,
         new_password=password_data.new_password
     )
