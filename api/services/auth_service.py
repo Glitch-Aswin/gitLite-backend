@@ -296,7 +296,7 @@ class AuthService:
     async def request_password_reset(self, email: str):
         """Request password reset email"""
         try:
-            self.db.auth.reset_password_email(email)
+            self.db.auth.reset_password_for_email(email)  
             return {"message": "Password reset email sent"}
         except Exception as e:
             # Don't reveal if email exists
